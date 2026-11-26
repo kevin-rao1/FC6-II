@@ -1,9 +1,0 @@
-#!/bin/sh
-cmds=/tmp/flash$$
-trap "rm $cmds" 0 1 15
-echo "reset" > $cmds
-openocd \
-	-f interface/stlink-v2.cfg \
-	-f target/lpc11xx.cfg \
-	-f $cmds \
-	-c shutdown

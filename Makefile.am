@@ -1,85 +1,14 @@
-SUBDIRS=ao-tools src doc icon altoslib libaltos altosuilib altosui micropeak ao-utils altosdroid telegps map-server
+# Competition-pruned FC6-II build.
+#
+# Only the STM32 firmware tree and the two host tools needed to turn an ELF
+# image into an Intel HEX / combined binary are kept. Android, desktop UI,
+# map server, radio/GPS/telemetry tooling and documentation packaging have
+# been removed from this branch.
 
-EXTRA_DIST = ChangeLog
+SUBDIRS = ao-tools src
 
-MAINTAINERCLEANFILES = ChangeLog
-
-.PHONY: ChangeLog
-
-ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || \
-	(touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
-
-dist-hook: ChangeLog
-
-if FATINSTALL
-fat-install: fat
-	cd altosui && $(MAKE) fat-install
-	cd telegps && $(MAKE) fat-install
-	cd micropeak && $(MAKE) fat-install
-endif
-
-fat: all-recursive
-	cd libaltos && $(MAKE) fat
-	cd altoslib && $(MAKE) all
-	cd icon && $(MAKE) fat
-	cd altosui && $(MAKE) fat
-	cd micropeak && $(MAKE) fat
-	cd telegps && $(MAKE) fat
-
-fat_linux = \
-	altosui/Altos-Linux-$(VERSION).sh altosui/Altos-Linux-$(VERSION).tar.bz2 \
-	telegps/TeleGPS-Linux-$(VERSION).sh telegps/TeleGPS-Linux-$(VERSION).tar.bz2 \
-	micropeak/MicroPeak-Linux-$(VERSION).sh micropeak/MicroPeak-Linux-$(VERSION).tar.bz2
-
-fat_mac = \
-	altosui/Altos-Mac-$(VERSION).dmg \
-	telegps/TeleGPS-Mac-$(VERSION).dmg \
-	micropeak/MicroPeak-Mac-$(VERSION).dmg
-
-fat_windows = \
-	altosui/Altos-Windows-$(VERSION_DASH).exe \
-	telegps/TeleGPS-Windows-$(VERSION_DASH).exe \
-	micropeak/MicroPeak-Windows-$(VERSION_DASH).exe
-
-fat_android = \
-	altosdroid/bin/AltosDroid-debug.apk \
-	altosdroid/bin/AltosDroid-release.apk
-
-fat_altos = \
-	src/easymega-v1.0/easymega-v1.0-$(VERSION).ihx \
-	src/easymega-v2.0/easymega-v2.0-$(VERSION).ihx \
-	src/easymega-v3.0/easymega-v3.0-$(VERSION).ihx \
-	src/easymini-v1.0/easymini-v1.0-$(VERSION).ihx \
-	src/easymini-v2.0/easymini-v2.0-$(VERSION).ihx \
-	src/easymini-v3.0/easymini-v3.0-$(VERSION).ihx \
-	src/easymotor-v3/easymotor-v3-$(VERSION).ihx \
-	src/easytimer-v1/easytimer-v1-$(VERSION).ihx \
-	src/easytimer-v2/easytimer-v2-$(VERSION).ihx \
-	src/telebt-v3.0/telebt-v3.0-$(VERSION).ihx \
-	src/telebt-v4.0/telebt-v4.0-$(VERSION).ihx \
-	src/teledongle-v3.0/teledongle-v3.0-$(VERSION).ihx \
-	src/telegps-v1.0/telegps-v1.0-$(VERSION).ihx \
-	src/telegps-v2.0/telegps-v2.0-$(VERSION).ihx \
-	src/telegps-v3.0/telegps-v3.0-$(VERSION).ihx \
-	src/telegps-v4.0/telegps-v4.0-$(VERSION).ihx \
-	src/telemega-v1.0/telemega-v1.0-$(VERSION).ihx \
-	src/telemega-v2.0/telemega-v2.0-$(VERSION).ihx \
-	src/telemega-v3.0/telemega-v3.0-$(VERSION).ihx \
-	src/telemega-v4.0/telemega-v4.0-$(VERSION).ihx \
-	src/telemega-v5.0/telemega-v5.0-$(VERSION).ihx \
-	src/telemega-v6.0/telemega-v6.0-$(VERSION).ihx \
-	src/telemega-v7.0/telemega-v7.0-$(VERSION).ihx \
-	src/telemetrum-v2.0/telemetrum-v2.0-$(VERSION).ihx \
-	src/telemetrum-v3.0/telemetrum-v3.0-$(VERSION).ihx \
-	src/telemetrum-v4.0/telemetrum-v4.0-$(VERSION).ihx \
-	src/telelco-v2.0/telelco-v2.0-$(VERSION).ihx \
-	src/telefireeight-v1.0/telefireeight-v1.0-$(VERSION).ihx \
-	src/telefireeight-v2.0/telefireeight-v2.0-$(VERSION).ihx
-
-keithp-fat: fat
-	ssh keithp.com mkdir -p public_html/altos-$(VERSION)
-	scp -p $(fat_linux) $(fat_mac) $(fat_windows) $(fat_android) $(fat_altos) keithp.com:public_html/altos-$(VERSION)
-
-set-java-versions:
-	$(top_srcdir)/fix-java-versions org.altusmetrum.altoslib=$(ALTOSLIB_VERSION) org.altusmetrum.altosuilib=$(ALTOSUILIB_VERSION)
+EXTRA_DIST = \
+	AUTHORS \
+	COPYING \
+	README.md \
+	autogen.sh
