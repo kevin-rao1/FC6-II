@@ -1,46 +1,130 @@
-# FC6-II — competition-pruned STM32 fork
+# FC6 II
+A fork of AltOS 1.9.22 by Altus Metrum, for use on EMB II avionics. 
+Built for UKROC/TARC 2027 to target a precise apogee with canard control. 
+The main changes are in state estimation and the addition of guidance. 
+Modifications are made under the same licence as the original. 
+This project is not affiliated with Altus Metrum. 
 
-This branch (`upstream`) is a competition-only prune of
-[`kevin-rao1/FC6-II`](https://github.com/kevin-rao1/FC6-II), itself a fork of
-AltOS 1.9.22 by Altus Metrum. It keeps the STM32 firmware tree and the two host
-utilities needed to produce Intel HEX / combined images. Modifications are
-under the original GNU GPL v2-or-later licence (`COPYING`). This project is not
-affiliated with Altus Metrum.
+ASRC would like to thank Keith Packard for his help. 
 
-## What was removed
+<sub>C6 // Aerospace · ASRC · 2026-27</sub>
 
-* Android application (`altosdroid`) and all desktop Java UI/library code
-  (`altosui`, `altosuilib`, `altoslib`, `libaltos`, `micropeak`, `telegps`).
-* Map server, packaging, installer/signing, documentation and AVR/LPC/SAMD/non-F1
-  targets.
-* All host-side radio, GPS, telemetry and device tools under `ao-tools`; only
-  `ao-elftohex`, `ao-makebin` and their shared `lib` remain for the build.
-* Radio, GPS, APRS, AES/FEC, packet and telemetry implementation files from
-  the shared firmware source tree. Header declarations still referenced by
-  `src/kernel/ao.h` are retained so the STM32 sources continue to compile.
 
-## What remains
+---
+Original Readme below:
 
-```
-ao-tools/     ELF -> HEX / combined-binary helpers only
-src/          STM32F1 kernel, drivers, utils and two F1 targets:
-                easymega-v3.0     STM32F1 flight-computer base
-                stm32f103-nucleo  minimal F103 build reference
-COPYING       GPL v2-or-later
-```
+AltOS - 8051 operating system for Altus-Metrum projects
 
-This branch is the clean STM32 baseline. The rocket-specific constants, pin
-map, F32 reference trajectory and rule-13 posture are on the sibling `main`
-branch. The ESP32-C3 Rust flight stack is maintained separately and is not part
-of this repository.
+Copyright and License
 
-## Build
+	Copyright © 2009 Keith Packard <keithp@keithp.com>
 
-```
-./autogen.sh --with-arm-cc=arm-none-eabi-gcc
-make -C src
-```
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
 
-`nickle`, `arm-none-eabi-gcc`, libusb-1.0 and libelf headers are required.
-A hardware-in-the-loop bench with the flight sensors and servos is still
-required; this fork is not flight-qualified by compilation alone.
+	This program is distributed in the hope that it will be useful, but
+	WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	General Public License for more details.
+
+	You should have received a copy of the GNU General Public License along
+	with this program; if not, write to the Free Software Foundation, Inc.,
+	59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+
+Tasking API:
+
+	 * Multi-tasking
+	 * Non-preemptive
+	 * Unix-style sleep/wakeup scheduling
+	 * Strict round-robin, no priorities
+
+	uint8_t ao_sleep(void *wchan)
+
+		Puts current task to sleep. Will wake up when wchan is
+		signalled (returning 0), or when an alarm has expired
+		(returning 1).
+	
+	void ao_wakeup(void *wchan)
+
+		Wakeup all tasks sleeping on wchan
+
+	void ao_add_task(struct ao_task *task, void (*start)(void))
+
+		Adds a task to the queue of available tasks
+
+	void ao_start_scheduler(void)
+
+		Invokes the scheduler, starting the operating system
+
+	void ao_yield(void)
+
+		Switches to another task which is ready to run. Allows
+		tasks which want to run for a while to give up the CPU
+		without needing to sleep
+
+	void ao_panic(uint8_t reason)
+
+		Any fatal error should call this function, which can
+		display the error code in some cryptic fashion.
+
+	void ao_wake_task(struct ao_task *task)
+
+		Wake the task as if the wchan it is waiting on had
+		been signalled.
+
+	void ao_alarm(uint16_t delay)
+
+		Queue an alarm to expire 'delay' ticks in the future.
+		The alarm will cause the task to wake from ao_sleep
+		and return 1. Alarms are cancelled if the task is
+		awoken by ao_wakeup or ao_wake_task.
+
+	void ao_exit(void)
+
+		Stop the current task and remove it from the list of
+		available tasks.
+
+Timer API
+
+	 * Regular timer ticks (at 100Hz, by default)
+	 * All time values are in ticks
+
+	 uint16_t ao_time(void)
+
+		Returns the curent tick count
+
+	void ao_delay(uint16_t delay)
+
+		Suspend task execution for 'delay' ticks.
+
+DMA API
+
+	 * Static DMA entry allocation
+
+	uint8_t ao_dma_alloc(uint8_t *done)
+
+		Allocates one of the 5 DMA units on the cc1111
+		processor. When this DMA unit is finished, it will
+		set *done to 1 and wakeup anyone waiting on that.
+
+	void ao_dma_set_transfer(uint8_t id, void *src, void *dst,
+				 uint16_t count, uint8_t cfg0, uint8_t cfg1)
+
+		Prepares the specified DMA unit for operation.
+
+	void ao_dma_start(uint8_t id)
+
+		Start DMA on the specified channel.
+
+	void ao_dma_trigger(uint8_t id)
+
+		Manually trigger a DMA channel
+
+	void ao_dma_abort(uint8_t id)
+
+		Abort a pending DMA transfer, signalling
+		that by setting the associated 'done' to
+		AO_DMA_ABORTED and waking any task
+		sleeping on that.
